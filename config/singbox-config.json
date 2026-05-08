@@ -1,0 +1,21 @@
+{
+  "inbounds": [
+    {
+      "type": "socks",
+      "listen": "127.0.0.1",
+      "listen_port": 9050
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "vless",
+      "server": "YOUR_SERVER.com",
+      "server_port": 443,
+      "uuid": "YOUR_UUID_HERE",
+      "tls": {
+        "enabled": true,
+        "server_name": "YOUR_SERVER.com"
+      }
+    }
+  ]
+}
