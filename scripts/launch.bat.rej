@@ -1,0 +1,29 @@
+--- launch.bat
++++ launch.bat
+@@ -10,12 +10,18 @@
+ set SINGBOX=%APP_DIR%\bin\proxy\sing-box.exe
+
+ REM Check if Firefox is extracted
+ if not exist "%FIREFOX%" (
+-    echo.
+-    echo ERROR: Firefox is not installed in the expected location.
+-    echo It seems you haven't extracted Firefox yet.
+-    echo Please run the Firefox Setup executable located in bin\firefox directory
+-    echo and install it to bin\Firefox directory before running this script.
+-    echo.
+-    pause
+-    exit /b 1
++    echo Firefox not found. Installing Firefox automatically...
++    REM Find the installer
++    for %%f in ("%APP_DIR%\bin\firefox\Firefox Setup*.exe") do (
++        echo Running installer: %%f
++        start /wait "" "%%f" /S /InstallDirectoryPath="%APP_DIR%\bin\Firefox"
++    )
++
++    REM Check again after installation
++    if not exist "%FIREFOX%" (
++        echo.
++        echo ERROR: Failed to install Firefox automatically.
++        echo Please manually run the Firefox installer in bin\firefox
++        echo and select bin\Firefox as the install location.
++        echo.

@@ -13,23 +13,14 @@ set SINGBOX=%APP_DIR%\bin\proxy\sing-box.exe
 
 REM Check if Firefox is extracted
 if not exist "%FIREFOX%" (
-    echo Firefox not found. Installing Firefox automatically...
-    REM Find the installer
-    for %%f in ("%APP_DIR%\bin\firefox\Firefox Setup*.exe") do (
-        echo Running installer: %%f
-        start /wait "" "%%f" /S /InstallDirectoryPath="%APP_DIR%\bin\Firefox"
-    )
-
-    REM Check again after installation
-    if not exist "%FIREFOX%" (
-        echo.
-        echo ERROR: Failed to install Firefox automatically.
-        echo Please manually run the Firefox installer in bin\firefox
-        echo and select bin\Firefox as the install location.
-        echo.
-        pause
-        exit /b 1
-    )
+    echo.
+    echo ERROR: Firefox is not installed in the expected location.
+    echo It seems you haven't extracted Firefox yet.
+    echo Please run the Firefox Setup executable located in bin\firefox directory
+    echo and install it to bin\Firefox directory before running this script.
+    echo.
+    pause
+    exit /b 1
 )
 
 
@@ -60,8 +51,8 @@ if not exist "%LICENSE_FILE%" (
     echo.
     echo Please enter your license key to get started.
     echo.
-    set /p LICENSE_KEY=Enter License Key: 
-    
+    set /p LICENSE_KEY=Enter License Key:
+
     if "!LICENSE_KEY!"=="" (
         echo.
         echo ERROR: License key cannot be empty
@@ -69,7 +60,7 @@ if not exist "%LICENSE_FILE%" (
         pause
         exit /b 1
     )
-    
+
     echo !LICENSE_KEY! > "%LICENSE_FILE%"
     echo.
     echo ✓ License key saved successfully!
@@ -92,7 +83,7 @@ if exist "%SystemRoot%\System32\curl.exe" (
     curl -s -X POST "https://api.grouplancing.com/gpl_admin/get_proxy_for_user" ^
       -H "Content-Type: application/json" ^
       -d "{\"license_key\": \"!LICENSE_KEY!\"}" > grouplancing_api_response.json
-    
+
     if exist grouplancing_api_response.json (
         echo API Response received
     ) else (
