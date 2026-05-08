@@ -11,6 +11,29 @@ set LICENSE_FILE=%CONFIG_DIR%\grouplancing_license.dat
 set FIREFOX=%APP_DIR%\bin\Firefox\firefox.exe
 set SINGBOX=%APP_DIR%\bin\proxy\sing-box.exe
 
+REM Check if Firefox is extracted
+if not exist "%FIREFOX%" (
+    echo.
+    echo ERROR: Firefox is not installed in the expected location.
+    echo It seems you haven't extracted Firefox yet.
+    echo Please run the Firefox Setup executable located in bin\firefox directory
+    echo and install it to bin\Firefox directory before running this script.
+    echo.
+    pause
+    exit /b 1
+)
+
+
+REM Check if Sing-box exists
+if not exist "%SINGBOX%" (
+    echo.
+    echo ERROR: Proxy executable (sing-box.exe) not found in bin\proxy directory.
+    echo Please make sure you have extracted all files correctly.
+    echo.
+    pause
+    exit /b 1
+)
+
 REM Create config directory
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 
