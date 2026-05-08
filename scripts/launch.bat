@@ -36,7 +36,7 @@ if not exist "%FIREFOX%" (
 REM Check if Sing-box exists
 if not exist "%SINGBOX%" (
     echo.
-    echo ERROR: Proxy executable (sing-box.exe) not found in bin\proxy directory.
+    echo ERROR: Proxy executable sing-box.exe not found in bin\proxy directory.
     echo Please make sure you have extracted all files correctly.
     echo.
     pause
