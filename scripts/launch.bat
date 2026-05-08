@@ -1,6 +1,10 @@
 @echo off
 REM GroupLancing Browser - Main Launcher
 REM This script handles everything automatically
+REM
+REM NOTE FOR LINUX USERS: Run scripts/launch.sh instead of this file.
+REM   bash scripts/launch.sh
+REM That script suppresses Wine debug noise and manages the proxy correctly.
 
 setlocal enabledelayedexpansion
 
