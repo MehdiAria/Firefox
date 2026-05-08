@@ -1,9 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-# Suppress all Wine debug/fixme/err output
+# Suppress Wine debug/fixme/err/warn channels
 export WINEDEBUG=-all
 export WINEARCH="${WINEARCH:-win64}"
+
+# Suppress libEGL / Mesa / DRI driver noise (Linux graphics stack)
+export EGL_LOG_LEVEL=fatal
+export MESA_DEBUG=silent
+export LIBGL_DEBUG=quiet
+export GALLIUM_HUD=
+
+# Suppress GStreamer pipeline warnings
+export GST_DEBUG=0
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(dirname "$SCRIPT_DIR")"
@@ -63,13 +72,11 @@ API_RESPONSE="$(curl -sf --max-time 10 \
 
 if [ -n "$API_RESPONSE" ]; then
     echo "$API_RESPONSE" > "$CONFIG_DIR/api_response.json"
-    # Write API-provided config directly if it looks like valid JSON
-    if echo "$API_RESPONSE" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/null; then
+    if echo "$API_RESPONSE" | python3 -c "import sys,json; c=json.load(sys.stdin); exit(0 if 'inbounds' in c else 1)" 2>/dev/null; then
         echo "$API_RESPONSE" > "$SINGBOX_CONFIG"
     fi
 fi
 
-# Fall back to bundled config if no valid config exists yet
 if [ ! -f "$SINGBOX_CONFIG" ]; then
     cp "$APP_DIR/bin/proxy/singbox-config.json" "$SINGBOX_CONFIG"
 fi
@@ -77,13 +84,13 @@ fi
 # ===== FIREFOX INSTALLATION =====
 if [ ! -f "$FIREFOX" ]; then
     echo "Firefox not found. Installing Firefox automatically..."
-    INSTALLER="$(find "$APP_DIR/bin/firefox" -name "Firefox Setup*.exe" | head -1)"
+    INSTALLER="$(find "$APP_DIR/bin/firefox" -name "Firefox Setup*.exe" 2>/dev/null | head -1)"
     if [ -z "$INSTALLER" ]; then
         echo "ERROR: Firefox installer not found in bin/firefox"
         exit 1
     fi
     WINE_INSTALL_DIR="$(winepath -w "$APP_DIR/bin/Firefox" 2>/dev/null)"
-    wine "$INSTALLER" /S "/InstallDirectoryPath=$WINE_INSTALL_DIR" 2>/dev/null
+    wine "$INSTALLER" /S "/InstallDirectoryPath=$WINE_INSTALL_DIR" >/dev/null 2>&1
     if [ ! -f "$FIREFOX" ]; then
         echo "ERROR: Failed to install Firefox automatically."
         echo "Please run the installer in bin/firefox and install to bin/Firefox."
@@ -113,7 +120,7 @@ SINGBOX_WIN_CONFIG="$(winepath -w "$SINGBOX_CONFIG" 2>/dev/null)"
 wine "$SINGBOX" run -c "$SINGBOX_WIN_CONFIG" >/dev/null 2>&1 &
 SINGBOX_PID=$!
 
-# Wait for sing-box to bind port 9050
+# Poll until port 9050 is listening (up to 5 s)
 for i in $(seq 1 10); do
     if ss -tlnp 2>/dev/null | grep -q ':9050'; then
         break
@@ -122,7 +129,7 @@ for i in $(seq 1 10); do
 done
 
 if ! ss -tlnp 2>/dev/null | grep -q ':9050'; then
-    echo "WARNING: Proxy did not start on port 9050 — check your configuration"
+    echo "WARNING: Proxy did not start on port 9050 — check singbox-config.json"
 fi
 
 # ===== LAUNCH FIREFOX =====
@@ -138,8 +145,8 @@ echo "Do NOT modify proxy settings in browser preferences"
 echo ""
 
 FIREFOX_WIN_PROFILE="$(winepath -w "$FIREFOX_PROFILE" 2>/dev/null)"
-wine "$FIREFOX" -profile "$FIREFOX_WIN_PROFILE" -no-remote 2>/dev/null
+wine "$FIREFOX" -profile "$FIREFOX_WIN_PROFILE" -no-remote >/dev/null 2>&1
 
-# cleanup runs via trap on EXIT
 echo ""
 echo "Cleaning up..."
+# cleanup() runs automatically via EXIT trap
